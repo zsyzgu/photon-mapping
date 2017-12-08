@@ -12,10 +12,10 @@ class Photontracer {
 	Scene* scene;
 	Photonmap* photonmap;
 
-	void PhotonTracing(Photon, int dep, bool refracted);
-	bool PhotonDiffusion(Collider*, Photon, int dep, bool refracted, double* prob);
-	bool PhotonReflection(Collider*, Photon, int dep, bool refracted, double* prob);
-	bool PhotonRefraction(Collider*, Photon, int dep, bool refracted, double* prob);
+	void PhotonTracing(Photon, Photon, Photon, int dep, bool refracted);
+	bool PhotonDiffusion(Collider*, Collider*, Collider*, Photon, Photon, Photon, int dep, bool refracted, double* prob);
+	bool PhotonReflection(Collider*, Collider*, Collider*, Photon, Photon, Photon, int dep, bool refracted, double* prob);
+	bool PhotonRefraction(Collider*, Collider*, Collider*, Photon, Photon, Photon, int dep, bool refracted, double* prob);
 
 public:
 	void SetScene( Scene* input ) { scene = input; }

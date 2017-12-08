@@ -2,6 +2,9 @@
 #include<iostream>
 #include<cmath>
 #include<algorithm>
+#include <map>
+#include <vector>
+#include "fit.h"
 
 const double INF = 1e8;
 
@@ -113,13 +116,64 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 	LocatePhotons(&np, 1);
 	if (np.found <= 8) return ret;
 
+	std::map<int, std::vector<Photon> > hitPhotons;
 	for (int i = 1; i <= np.found; i++) {
 		Vector3 dir = np.photons[i]->dir;
-		if (collider->N.Dot(dir) < 0)
-			ret += np.photons[i]->power * collider->GetPrimitive()->GetMaterial()->BRDF(-dir, collider->N, -collider->I);
+		if (collider->N.Dot(dir) < 0) {
+			int hash = np.photons[i]->hash;
+			if (np.photons[i]->irr < EPS) {
+				hash = -1;
+			}
+			hitPhotons[hash].push_back(*np.photons[i]);
+		}
 	}
 
-	ret = ret * (4 / (emit_photons * np.dist2[0]));
+	std::map<int, std::vector<Photon> >::iterator it = hitPhotons.begin();
+	for (; it != hitPhotons.end(); it++) {
+		int n = it->second.size();
+		if (it->second[0].irr < EPS) {
+			Color color;
+			for (int i = 0; i < n; i++) {
+				color += it->second[i].power * collider->GetPrimitive()->GetMaterial()->BRDF(-it->second[i].dir, collider->N, -collider->I);
+			}
+			color = color * (4 / (emit_photons * np.dist2[0]));
+			ret += color;
+		} else {
+			Color color;
+			float aveIrr = 0;
+			for (int i = 0; i < n; i++) {
+				color += it->second[i].power * collider->GetPrimitive()->GetMaterial()->BRDF(-it->second[i].dir, collider->N, -collider->I);
+				aveIrr += it->second[i].irr;
+			}
+			color = color / n;
+			aveIrr = aveIrr / n;
+
+			Fit fit;
+			Vector3 Dx = collider->N.GetAnVerticalVector();
+			Vector3 Dy = (collider->N * Dx).GetUnitVector();
+			std::vector<float> xs, ys, zs;
+			for (int i = 0; i < n; i++) {
+				xs.push_back((it->second[i].pos - collider->C).Dot(Dx));
+				ys.push_back((it->second[i].pos - collider->C).Dot(Dy));
+				zs.push_back(it->second[i].irr);
+			}
+			if (fit.linearFit(xs, ys, zs) && fit.getR2() > 0.8) {
+				ret += color * fit.getValue(0, 0);
+			}
+			else {
+				ret += color * aveIrr;
+			}
+		}
+	}
+
+	/*for (int i = 1; i <= np.found; i++) {
+		Vector3 dir = np.photons[i]->dir;
+		if (collider->N.Dot(dir) < 0) {
+			ret += np.photons[i]->power * collider->GetPrimitive()->GetMaterial()->BRDF(-dir, collider->N, -collider->I);
+		}
+	}
+
+	ret = ret * (4 / (emit_photons * np.dist2[0]));*/
 	return ret;
 }
 

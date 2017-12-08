@@ -13,8 +13,8 @@ public:
 	Vector3 pos , dir;
 	Color power;
 	int plane;
-	int hash;
-	float d2;
+	int hash = 1;
+	float irr = 1;
 };
 
 class Nearestphotons {
