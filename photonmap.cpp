@@ -40,21 +40,43 @@ void Photonmap::Store( Photon photon ) {
 }
 
 void Photonmap::Balance() {
-	Photon* porg = new Photon[stored_photons + 1];
+	Photon** pbal = new Photon*[stored_photons + 1];
+	Photon** porg = new Photon*[stored_photons + 1];
 
 	for ( int i = 0 ; i <= stored_photons ; i++ )
-		porg[i] = photons[i];
+		porg[i] = &photons[i];
 	
-	BalanceSegment( porg , 1 , 1 , stored_photons );
+	BalanceSegment( pbal, porg , 1 , 1 , stored_photons );
 	delete[] porg;
+
+	int j = 1, foo = 1;
+	Photon foo_photon = photons[j];
+	for (int i = 1; i <= stored_photons; i++) {
+		int d = pbal[j] - photons;
+		pbal[j] = NULL;
+		if (d != foo) {
+			photons[j] = photons[d];
+		}
+		else {
+			photons[j] = foo_photon;
+
+			if (i < stored_photons) {
+				for (; foo <= stored_photons; foo++) {
+					if (pbal[foo] != NULL) {
+						break;
+					}
+				}
+				foo_photon = photons[foo];
+				j = foo;
+			}
+			continue;
+		}
+		j = d;
+	}
+	delete[] pbal;
 }
 
-void Photonmap::BalanceSegment( Photon* porg , int index , int st , int en ) {
-	if ( st == en ) {
-		photons[index] = porg[st];
-		return;
-	}
-
+void Photonmap::BalanceSegment( Photon** pbal, Photon** porg , int index , int st , int en ) {
 	int med = 1;
 	while ( 4 * med <= en - st + 1 ) med <<= 1;
 
@@ -66,33 +88,43 @@ void Photonmap::BalanceSegment( Photon* porg , int index , int st , int en ) {
 	if ( box_max.y - box_min.y > box_max.z - box_min.z ) axis = 1;
 
 	MedianSplit( porg , st , en , med , axis );
-	photons[index] = porg[med];
-	photons[index].plane = axis;
+	pbal[index] = porg[med];
+	pbal[index]->plane = axis;
 
 	if ( st < med ) {
-		double tmp = box_max.GetCoord( axis );
-		box_max.GetCoord( axis ) = photons[index].pos.GetCoord( axis );
-		BalanceSegment( porg , index * 2 , st , med - 1 );
-		box_max.GetCoord( axis ) = tmp;
+		if (st < med - 1) {
+			double tmp = box_max.GetCoord(axis);
+			box_max.GetCoord(axis) = pbal[index]->pos.GetCoord(axis);
+			BalanceSegment(pbal, porg, index * 2, st, med - 1);
+			box_max.GetCoord(axis) = tmp;
+		}
+		else {
+			pbal[index * 2] = porg[st];
+		}
 	}
 
 	if ( med < en ) {
-		double tmp = box_min.GetCoord( axis );
-		box_min.GetCoord( axis ) = photons[index].pos.GetCoord( axis );
-		BalanceSegment( porg , index * 2 + 1 , med + 1 , en );
-		box_min.GetCoord( axis ) = tmp;
+		if (med + 1 < en) {
+			double tmp = box_min.GetCoord(axis);
+			box_min.GetCoord(axis) = pbal[index]->pos.GetCoord(axis);
+			BalanceSegment(pbal, porg, index * 2 + 1, med + 1, en);
+			box_min.GetCoord(axis) = tmp;
+		}
+		else {
+			pbal[index * 2 + 1] = porg[en];
+		}
 	}
 }
 
-void Photonmap::MedianSplit( Photon* porg , int st , int en , int med , int axis ) {
+void Photonmap::MedianSplit( Photon** porg , int st , int en , int med , int axis ) {
 	int l = st , r = en;
 
 	while ( l < r ) {
-		double key = porg[r].pos.GetCoord( axis );
+		double key = porg[r]->pos.GetCoord( axis );
 		int i = l - 1 , j = r;
 		for ( ; ; ) {
-			while ( porg[++i].pos.GetCoord( axis ) < key );
-			while ( porg[--j].pos.GetCoord( axis ) > key && j > l );
+			while ( porg[++i]->pos.GetCoord( axis ) < key );
+			while ( porg[--j]->pos.GetCoord( axis ) > key && j > l );
 			if ( i >= j ) break;
 			std::swap( porg[i] , porg[j] );
 		}
@@ -114,7 +146,6 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 	np.dist2[0] = max_dist * max_dist;
 
 	LocatePhotons(&np, 1);
-	if (np.found <= 8) return ret;
 
 	std::map<int, std::vector<Photon> > hitPhotons;
 	for (int i = 1; i <= np.found; i++) {
@@ -131,7 +162,8 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 	std::map<int, std::vector<Photon> >::iterator it = hitPhotons.begin();
 	for (; it != hitPhotons.end(); it++) {
 		int n = it->second.size();
-		if (it->second[0].irr < EPS) {
+
+		if (true || it->second[0].irr < EPS || n < 4) {
 			Color color;
 			for (int i = 0; i < n; i++) {
 				color += it->second[i].power * collider->GetPrimitive()->GetMaterial()->BRDF(-it->second[i].dir, collider->N, -collider->I);
@@ -140,7 +172,20 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 			ret += color;
 		} else {
 			Color color;
-			float aveIrr = 0;
+
+			float sigma2 = np.dist2[0] / 9;
+			float denom = 1.0 / n; //should be 0 accurately, add a black point at (0,0) for soft shadow
+			for (int i = 0; i < n; i++) {
+				float dist2 = collider->C.Distance2(it->second[i].pos);
+				float k = exp(-dist2 / sigma2);
+				denom += k;
+				float BRDF = collider->GetPrimitive()->GetMaterial()->BRDF(-it->second[i].dir, collider->N, -collider->I);
+				color += it->second[i].power * it->second[i].irr * BRDF * k;
+			}
+			color = color / denom;
+			ret += color;
+
+			/*float aveIrr = 0;
 			for (int i = 0; i < n; i++) {
 				color += it->second[i].power * collider->GetPrimitive()->GetMaterial()->BRDF(-it->second[i].dir, collider->N, -collider->I);
 				aveIrr += it->second[i].irr;
@@ -148,7 +193,9 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 			color = color / n;
 			aveIrr = aveIrr / n;
 
-			Fit fit;
+			ret += color * aveIrr;*/
+
+			/*Fit fit;
 			Vector3 Dx = collider->N.GetAnVerticalVector();
 			Vector3 Dy = (collider->N * Dx).GetUnitVector();
 			std::vector<float> xs, ys, zs;
@@ -157,12 +204,33 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 				ys.push_back((it->second[i].pos - collider->C).Dot(Dy));
 				zs.push_back(it->second[i].irr);
 			}
-			if (fit.linearFit(xs, ys, zs) && fit.getR2() > 0.8) {
-				ret += color * fit.getValue(0, 0);
+			std::vector<float> atans;
+			for (int i = 0; i < n; i++) {
+				atans.push_back(atan2(xs[i], ys[i]));
 			}
-			else {
-				ret += color * aveIrr;
+			sort(atans.begin(), atans.end());
+			atans.push_back(atans[0] + 2 * 3.1415927);
+			bool flag = false;
+			for (int i = 0; i < n; i++) {
+				if (atans[i + 1] - atans[i] > 3.1415927) {
+					flag = true;
+				}
 			}
+			if (flag) {
+				color = color * n * (4 / (emit_photons * np.dist2[0]));
+				ret += color;
+			} else
+
+			if (fit.linearFit(xs, ys, zs)) {
+				if (abs(fit.getValue(0, 0) - aveIrr) > 0.05) {
+					std::cout << " =========== " << n << " " << fit.getValue(0, 0) << " " << aveIrr << " " << fit.getR2() << std::endl;
+					for (int i = 0; i < n; i++) {
+						std::cout << xs[i] << ", " << ys[i] << ", " << zs[i] << std::endl;
+					}
+				}
+
+				ret += fit.getValue(0, 0);
+			}*/
 		}
 	}
 

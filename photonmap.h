@@ -35,8 +35,8 @@ class Photonmap {
 	Photon* photons;
 	Vector3 box_min , box_max;
 
-	void BalanceSegment( Photon* porg , int index , int st , int en );
-	void MedianSplit( Photon* porg , int st , int en , int med , int axis );
+	void BalanceSegment( Photon** pbal, Photon** porg , int index , int st , int en );
+	void MedianSplit( Photon** porg , int st , int en , int med , int axis );
 	void LocatePhotons( Nearestphotons* np , int index ); //called by index = 1
 
 public:

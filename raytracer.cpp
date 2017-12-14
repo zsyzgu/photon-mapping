@@ -113,7 +113,7 @@ void Raytracer::Run() {
 		}
 	}
 
-	/*for ( int i = 0 ; i < H ; std::cout << "Resampling: " << ++i << "/" << H << std::endl ) {
+	for ( int i = 0 ; i < H ; std::cout << "Resampling: " << ++i << "/" << H << std::endl ) {
 		for ( int j = 0 ; j < W ; j++ ) {
 			if ( ( i == 0 || sample[i][j] == sample[i - 1][j] ) && ( i == H - 1 || sample[i][j] == sample[i + 1][j] ) &&
 			     ( j == 0 || sample[i][j] == sample[i][j - 1] ) && ( j == W - 1 || sample[i][j] == sample[i][j + 1] ) ) continue;
@@ -122,11 +122,11 @@ void Raytracer::Run() {
 			for ( int r = -1 ; r <= 1 ; r++ )
 				for ( int c = -1 ; c <= 1 ; c++ ) {
 					Vector3 ray_V = camera->Emit( i + ( double ) r / 3 , j + ( double ) c / 3 );
-					color += RayTracing( ray_O , ray_V , 1 , NULL ) / 9;
+					color += RayTracing( ray_O , ray_V , 1 , false, NULL ) / 9;
 				}
 			camera->SetColor( i , j , color );
 		}
-	}*/
+	}
 	
 	for ( int i = 0 ; i < H ; i++ )
 		delete[] sample[i];
