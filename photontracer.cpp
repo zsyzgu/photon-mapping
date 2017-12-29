@@ -159,7 +159,7 @@ void Photontracer::Run() {
 			Photon subPhoton1 = photon;
 			Photon subPhoton2 = photon;
 			Vector3 Dx = photon.dir.GetAnVerticalVector();
-			Vector3 Dy = photon.dir * Dx;
+			Vector3 Dy = photon.dir.Cross(Dx);
 			Dx = Dx.GetUnitVector() * PERTURBATION;
 			Dy = Dy.GetUnitVector() * PERTURBATION;
 			subPhoton1.dir += Dx;

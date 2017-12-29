@@ -71,7 +71,7 @@ LightCollider AreaLight::Collide(Vector3 ray_O, Vector3 ray_V) {
 	ret.SetLight(this);
 
 	ray_V = ray_V.GetUnitVector();
-	Vector3 N = (Dx * Dy).GetUnitVector();
+	Vector3 N = (Dx.Cross(Dy)).GetUnitVector();
 	double d = N.Dot(ray_V);
 	if (fabs(d) < EPS) return ret;
 	double l = (N * O.Dot(N) - ray_O).Dot(N) / d;

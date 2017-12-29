@@ -19,6 +19,7 @@ public:
 	double rindex;
 	double drefl;
 	Bmp* texture;
+	Bmp* bump;
 
 	Material();
 	~Material() {}
@@ -57,15 +58,18 @@ public:
 	Primitive();
 	Primitive( const Primitive& );
 	~Primitive();
-	
+
+	void SetSample(int _sample) { sample = _sample; }
 	int GetSample() { return sample; }
+	void SetMaterial(Material* _material) { material = _material; }
 	Material* GetMaterial() { return material; }
 	Primitive* GetNext() { return next; }
 	void SetNext( Primitive* primitive ) { next = primitive; }
 
+	virtual void PreTreatment() {}
 	virtual void Input( std::string , std::stringstream& );
 	virtual Collider Collide( Vector3 ray_O , Vector3 ray_V ) = 0;
-	virtual Color GetTexture(Vector3 C) = 0;
+	virtual Color GetTexture(Vector3 C);
 };
 
 class Sphere : public Primitive {

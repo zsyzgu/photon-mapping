@@ -7,15 +7,15 @@
 
 using namespace std;
 
-Bmp::Bmp( int H , int W ) {
-	Initialize( H , W );
+Bmp::Bmp(int H, int W) {
+	Initialize(H, W);
 }
 
 Bmp::~Bmp() {
 	Release();
 }
 
-void Bmp::Initialize( int H , int W ) {
+void Bmp::Initialize(int H, int W) {
 	strHead.bfReserved1 = 0;
 	strHead.bfReserved2 = 0;
 	strHead.bfOffBits = 54;
@@ -35,69 +35,80 @@ void Bmp::Initialize( int H , int W ) {
 	strHead.bfSize = strInfo.biSizeImage + strInfo.biBitCount;
 
 	ima = new IMAGEDATA*[H];
-	for ( int i = 0 ; i < H ; i++ )
+	for (int i = 0; i < H; i++)
 		ima[i] = new IMAGEDATA[W];
 }
 
 void Bmp::Release() {
-	for ( int i = 0 ; i < strInfo.biHeight ; i++ )
+	for (int i = 0; i < strInfo.biHeight; i++)
 		delete[] ima[i];
 
 	delete[] ima;
 }
 
-void Bmp::Input( std::string file ) {
+void Bmp::Input(std::string file) {
 	Release();
 
-	FILE *fpi = fopen( file.c_str() , "rb" );
+	FILE *fpi = fopen(file.c_str(), "rb");
 	word bfType;
-	fread( &bfType , 1 , sizeof( word ) , fpi );
-	fread( &strHead , 1 , sizeof( BITMAPFILEHEADER ) , fpi );
-	fread( &strInfo , 1 , sizeof( BITMAPINFOHEADER ) , fpi );
-	
+	fread(&bfType, 1, sizeof(word), fpi);
+	fread(&strHead, 1, sizeof(BITMAPFILEHEADER), fpi);
+	fread(&strInfo, 1, sizeof(BITMAPINFOHEADER), fpi);
+
 	RGBQUAD Pla;
-	for ( int i = 0 ; i < ( int ) strInfo.biClrUsed ; i++ ) {
-		fread( ( char * ) & ( Pla.rgbBlue ) , 1 , sizeof( byte ) , fpi );
-		fread( ( char * ) & ( Pla.rgbGreen ) , 1 , sizeof( byte ) , fpi );
-		fread( ( char * ) & ( Pla.rgbRed ) , 1 , sizeof( byte ) , fpi );
+	for (int i = 0; i < (int)strInfo.biClrUsed; i++) {
+		fread((char *) & (Pla.rgbBlue), 1, sizeof(byte), fpi);
+		fread((char *) & (Pla.rgbGreen), 1, sizeof(byte), fpi);
+		fread((char *) & (Pla.rgbRed), 1, sizeof(byte), fpi);
 	}
 
-	Initialize( strInfo.biHeight , strInfo.biWidth );
-	for(int i = 0 ; i < strInfo.biHeight ; i++ )
-		for(int j = 0 ; j < strInfo.biWidth ; j++ ) {
-			fread( &ima[i][j].blue , 1 , sizeof( byte ) , fpi );
-			fread( &ima[i][j].green , 1 , sizeof( byte ) , fpi );
-			fread( &ima[i][j].red , 1 , sizeof( byte ) , fpi );
-		}
+	Initialize(strInfo.biHeight, strInfo.biWidth);
 
-	fclose( fpi );
+	int pitch = strInfo.biWidth % 4;
+	for (int i = 0; i < strInfo.biHeight; i++) {
+		for (int j = 0; j < strInfo.biWidth; j++) {
+			fread(&ima[i][j].blue, 1, sizeof(byte), fpi);
+			fread(&ima[i][j].green, 1, sizeof(byte), fpi);
+			fread(&ima[i][j].red, 1, sizeof(byte), fpi);
+		}
+		byte buffer = 0;
+		for (int j = 0; j < pitch; j++)
+			fread(&buffer, 1, sizeof(byte), fpi);
+	}
+
+	fclose(fpi);
 }
 
-void Bmp::Output( std::string file ) {
-	FILE *fpw = fopen( file.c_str() , "wb" );
+void Bmp::Output(std::string file) {
+	FILE *fpw = fopen(file.c_str(), "wb");
 
 	word bfType = 0x4d42;
-	fwrite( &bfType , 1 , sizeof( word ) , fpw );
-	fwrite( &strHead , 1 , sizeof( BITMAPFILEHEADER ) , fpw );
-	fwrite( &strInfo , 1 , sizeof( BITMAPINFOHEADER ) , fpw );
+	fwrite(&bfType, 1, sizeof(word), fpw);
+	fwrite(&strHead, 1, sizeof(BITMAPFILEHEADER), fpw);
+	fwrite(&strInfo, 1, sizeof(BITMAPINFOHEADER), fpw);
 
-	for ( int i = 0 ; i < strInfo.biHeight ; i++ )
-		for ( int j = 0 ; j < strInfo.biWidth ; j++ ) {
-			fwrite( &ima[i][j].blue , 1 , sizeof( byte ) , fpw );
-			fwrite( &ima[i][j].green , 1 , sizeof( byte ) , fpw );
-			fwrite( &ima[i][j].red , 1 , sizeof( byte ) , fpw );
+	int pitch = strInfo.biWidth % 4;
+	for (int i = 0; i < strInfo.biHeight; i++) {
+		for (int j = 0; j < strInfo.biWidth; j++) {
+			fwrite(&ima[i][j].blue, 1, sizeof(byte), fpw);
+			fwrite(&ima[i][j].green, 1, sizeof(byte), fpw);
+			fwrite(&ima[i][j].red, 1, sizeof(byte), fpw);
 		}
-	
-	fclose( fpw );
+		byte buffer = 0;
+		for (int j = 0; j < pitch; j++)
+			fwrite(&buffer, 1, sizeof(byte), fpw);
+	}
+
+	fclose(fpw);
 }
 
-void Bmp::SetColor( int i , int j , Color col ) {
-	ima[i][j].red = ( int ) ( col.r * 255 );
-	ima[i][j].green = ( int ) ( col.g * 255 );
-	ima[i][j].blue = ( int ) ( col.b * 255 );
+void Bmp::SetColor(int i, int j, Color col) {
+	ima[i][j].red = (int)(col.r * 255);
+	ima[i][j].green = (int)(col.g * 255);
+	ima[i][j].blue = (int)(col.b * 255);
 }
 
-Color Bmp::GetSmoothColor( double u , double v ) {
+Color Bmp::GetSmoothColor(double u, double v) {
 	double U = (u + EPS - floor(u + EPS)) * strInfo.biHeight;
 	double V = (v + EPS - floor(v + EPS)) * strInfo.biWidth;
 	int U1 = (int)floor(U + EPS), U2 = U1 + 1;

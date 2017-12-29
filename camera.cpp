@@ -42,7 +42,7 @@ Camera::~Camera() {
 void Camera::Initialize() {
 	N = N.GetUnitVector();
 	Dx = N.GetAnVerticalVector();
-	Dy = Dx * N;
+	Dy = Dx.Cross(N);
 	Dx = Dx * lens_W / 2;
 	Dy = Dy * lens_H / 2;
 

@@ -19,14 +19,14 @@ struct BITMAPFILEHEADER {
 
 struct BITMAPINFOHEADER {
 	dword biSize;
-	int biWidth;
-	int biHeight;
+	long biWidth;
+	long biHeight;
 	word biPlanes;
 	word biBitCount;
 	dword biCompression;
 	dword biSizeImage;
-	int biXPelsPerMeter;
-	int biYPelsPerMeter;
+	long biXPelsPerMeter;
+	long biYPelsPerMeter;
 	dword biClrUsed;
 	dword biClrImportant;
 };
@@ -43,7 +43,7 @@ struct IMAGEDATA {
 	byte green;
 	byte blue;
 	Color GetColor() {
-		return Color( red , green , blue ) / 256;
+		return Color(red, green, blue) / 255;
 	}
 };
 
@@ -54,20 +54,20 @@ class Bmp {
 	IMAGEDATA** ima;
 
 	void Release();
-	
+
 public:
-	Bmp( int H = 0 , int W = 0 );
+	Bmp(int H = 0, int W = 0);
 	~Bmp();
 
 	int GetH() { return strInfo.biHeight; }
 	int GetW() { return strInfo.biWidth; }
-	Color GetColor( int i , int j ) { return Color( ima[i][j].red , ima[i][j].green , ima[i][j].blue ) / 256; }
-	void SetColor( int i , int j , Color );
+	Color GetColor(int i, int j) { return Color(ima[i][j].red, ima[i][j].green, ima[i][j].blue) / 256; }
+	void SetColor(int i, int j, Color);
 
-	void Initialize( int H , int W );
-	void Input( std::string file );
-	void Output( std::string file );
-	Color GetSmoothColor( double u , double v );
+	void Initialize(int H, int W);
+	void Input(std::string file);
+	void Output(std::string file);
+	Color GetSmoothColor(double u, double v);
 };
 
 #endif

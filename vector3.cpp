@@ -23,8 +23,8 @@ Vector3 operator / ( const Vector3& A , const double& k ) {
 	return Vector3( A.x / k , A.y / k , A.z / k );
 }
 
-Vector3 operator * ( const Vector3& A , const Vector3& B ) {
-	return Vector3( A.y * B.z - A.z * B.y , A.z * B.x - A.x * B.z , A.x * B.y - A.y * B.x );
+Vector3 operator * (const Vector3& A, const Vector3& B) {
+	return Vector3(A.x * B.x, A.y * B.y, A.z * B.z);
 }
 
 Vector3& operator += ( Vector3& A , const Vector3& B ) {
@@ -47,10 +47,10 @@ Vector3& operator += ( Vector3& A , const double& k ) {
 	return A;
 }
 
-Vector3& operator *= ( Vector3& A , const Vector3& B ) {
+/*Vector3& operator *= ( Vector3& A , const Vector3& B ) {
 	A = A * B;
 	return A;
-}
+}*/
 
 Vector3 operator - ( const Vector3& A ) {
 	return Vector3( -A.x , -A.y , -A.z );
@@ -58,6 +58,10 @@ Vector3 operator - ( const Vector3& A ) {
 
 double Vector3::Dot( const Vector3& term ) {
 	return x * term.x + y * term.y + z * term.z;
+}
+
+Vector3 Vector3::Cross(const Vector3& term) {
+	return Vector3(y * term.z - z * term.y, z * term.x - x * term.z, x * term.y - y * term.x);
 }
 
 double Vector3::Module2() {
@@ -96,7 +100,7 @@ void Vector3::AssRandomVector() {
 }
 
 Vector3 Vector3::GetAnVerticalVector() {
-	Vector3 ret = *this * Vector3( 0 , 0 , 1 );
+	Vector3 ret = this->Cross(Vector3( 0 , 0 , 1 ));
 	if ( ret.IsZeroVector() ) ret = Vector3( 1 , 0 , 0 );
 		else ret = ret.GetUnitVector();
 	return ret;

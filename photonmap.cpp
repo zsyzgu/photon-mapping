@@ -163,7 +163,7 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 	for (; it != hitPhotons.end(); it++) {
 		int n = it->second.size();
 
-		if (true || it->second[0].irr < EPS || n < 4) {
+		if (it->second[0].irr < EPS || n < 4) {
 			Color color;
 			for (int i = 0; i < n; i++) {
 				color += it->second[i].power * collider->GetPrimitive()->GetMaterial()->BRDF(-it->second[i].dir, collider->N, -collider->I);

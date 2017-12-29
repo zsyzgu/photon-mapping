@@ -29,6 +29,11 @@ void Material::Input( std::string var , std::stringstream& fin ) {
 		texture = new Bmp;
 		texture->Input( file );
 	}
+	if (var == "bump=") {
+		std::string file; fin >> file;
+		bump = new Bmp;
+		bump->Input(file);
+	}
 }
 
 double Material::BRDF(Vector3 ray_R, Vector3 N, Vector3 ray_I) {
@@ -62,6 +67,10 @@ Primitive::~Primitive() {
 
 void Primitive::Input( std::string var , std::stringstream& fin ) {
 	material->Input( var , fin );
+}
+
+Color Primitive::GetTexture(Vector3 C) {
+	return Color(0, 0, 0);
 }
 
 Sphere::Sphere() : Primitive() {
@@ -115,7 +124,7 @@ Color Sphere::GetTexture(Vector3 C) {
 	double a = acos(-I.Dot(De));
 	double b = acos(std::min(std::max(I.Dot(Dc) / sin(a), -1.0), 1.0));
 	double u = a / PI, v = b / 2 / PI;
-	if (I.Dot(Dc * De) < 0) v = 1 - v;
+	if (I.Dot(Dc.Cross(De)) < 0) v = 1 - v;
 	return material->texture->GetSmoothColor(u, v);
 }
 

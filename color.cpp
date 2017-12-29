@@ -3,7 +3,7 @@
 #include<cmath>
 #include <algorithm>
 
-extern const double EPS;
+extern const float EPS;
 
 Color operator + (const Color& A, const Color& B) {
 	return Color(A.r + B.r, A.g + B.g, A.b + B.b);
@@ -17,11 +17,11 @@ Color operator * (const Color& A, const Color& B) {
 	return Color(A.r * B.r, A.g * B.g, A.b * B.b);
 }
 
-Color operator * (const Color& A, const double& k) {
+Color operator * (const Color& A, const float& k) {
 	return Color(A.r * k, A.g * k, A.b * k);
 }
 
-Color operator / (const Color& A, const double& k) {
+Color operator / (const Color& A, const float& k) {
 	return Color(A.r / k, A.g / k, A.b / k);
 }
 
@@ -40,12 +40,12 @@ Color& operator *= (Color& A, const Color& B) {
 	return A;
 }
 
-Color& operator *= (Color& A, const double& k) {
+Color& operator *= (Color& A, const float& k) {
 	A = A * k;
 	return A;
 }
 
-Color& operator /= (Color& A, const double& k) {
+Color& operator /= (Color& A, const float& k) {
 	A = A / k;
 	return A;
 }
@@ -58,11 +58,11 @@ Color Color::Exp() {
 	return Color(exp(r), exp(g), exp(b));
 }
 
-double Color::Power() {
+float Color::Power() {
 	return (r + g + b) / 3;
 }
 
-double Color::RGBMax() {
+float Color::RGBMax() {
 	if (r > g)
 		return (r > b) ? r : b;
 	return (g > b) ? g : b;
@@ -73,5 +73,5 @@ void Color::Input(std::stringstream& fin) {
 }
 
 bool Color::IsZeroColor() {
-	return fabs(r) < EPS && fabs(g) < EPS && fabs(b) < EPS;
+	return fabs(r) < 1e-6 && fabs(g) < 1e-6 && fabs(b) < 1e-6;
 }
