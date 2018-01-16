@@ -6,7 +6,7 @@
 
 const int MAX_PHOTONS = 10000000;
 const int MAX_PHOTONTRACING_DEP = 10;
-const float PERTURBATION = 1e-5;
+const float PERTURBATION = 1e-6;
 
 bool Photontracer::PhotonDiffusion(Collider* collider, Collider* collider1, Collider* collider2, Photon photon, Photon subPhoton1, Photon subPhoton2, int dep, bool refracted, double* prob) {
 	Primitive* pri = collider->GetPrimitive();
@@ -39,8 +39,6 @@ bool Photontracer::PhotonReflection(Collider* collider, Collider* collider1, Col
 		*prob -= material->refl;
 		return false;
 	}
-
-	photon.power = photon.power * color / color.Power();
 
 	photon.dir = photon.dir.Reflect(collider->N);
 	subPhoton1.dir = subPhoton1.dir.Reflect(collider1->N);
@@ -127,7 +125,9 @@ void Photontracer::PhotonTracing(Photon photon, Photon subPhoton1, Photon subPho
 				float p = (a + b + c) / 2;
 				float area = sqrt(p * (p - a) * (p - b) * (p - c));
 				storePhoton.irr *= (PERTURBATION * PERTURBATION / 2) / area;
-				photonmap->Store(storePhoton);
+				if (!isinf(storePhoton.irr) && storePhoton.irr <= 100) {
+					photonmap->Store(storePhoton);
+				}
 			}
 		}
 

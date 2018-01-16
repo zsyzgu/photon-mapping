@@ -28,6 +28,7 @@ Color Raytracer::CalnDiffusion(Collider* collider, int* hash ) {
 	Color ret = color * scene->GetBackgroundColor() * pri->GetMaterial()->diff;
 
 	Camera* camera = scene->GetCamera();
+
 	ret += color * photonmap->GetIrradiance( collider , camera->GetSampleDist() , camera->GetSamplePhotons() ) * pri->GetMaterial()->diff;
 
 	return ret;
@@ -105,7 +106,9 @@ void Raytracer::Run() {
 			sample[i][j] = 0;
 	}
 
-	for ( int i = 0 ; i < H ; std::cout << "Sampling:   " << ++i << "/" << H << std::endl ) {
+#pragma omp parallel for
+	for ( int i = 0 ; i < H ; i++ ) {
+		std::cout << "Sampling:   " << i << "/" << H << std::endl;
 		for ( int j = 0 ; j < W ; j++ ) {
 			Vector3 ray_V = camera->Emit( i , j );
 			Color color = RayTracing( ray_O , ray_V , 1 , false, &sample[i][j] );
@@ -113,7 +116,9 @@ void Raytracer::Run() {
 		}
 	}
 
-	for ( int i = 0 ; i < H ; std::cout << "Resampling: " << ++i << "/" << H << std::endl ) {
+#pragma omp parallel for
+	for ( int i = 0 ; i < H ; i++ ) {
+		std::cout << "Resampling: " << i << "/" << H << std::endl;
 		for ( int j = 0 ; j < W ; j++ ) {
 			if ( ( i == 0 || sample[i][j] == sample[i - 1][j] ) && ( i == H - 1 || sample[i][j] == sample[i + 1][j] ) &&
 			     ( j == 0 || sample[i][j] == sample[i][j - 1] ) && ( j == W - 1 || sample[i][j] == sample[i][j + 1] ) ) continue;
@@ -136,4 +141,6 @@ void Raytracer::Run() {
 	camera->Output( bmp );
 	bmp->Output( output );
 	delete bmp;
+
+	system("Pause");
 }

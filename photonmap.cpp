@@ -183,6 +183,7 @@ Color Photonmap::GetIrradiance(Collider* collider, double max_dist, int n) {
 				color += it->second[i].power * it->second[i].irr * BRDF * k;
 			}
 			color = color / denom;
+			
 			ret += color;
 
 			/*float aveIrr = 0;
