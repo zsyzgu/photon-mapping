@@ -51,6 +51,7 @@ Color PointLight::GetIrradiance(Collider* collider, Primitive* primitive_head, i
 	Vector3 V = O - collider->C;
 	double dist = V.Module();
 
+	int cnt = 0;
 	for (Primitive* now = primitive_head; now != NULL; now = now->GetNext()) {
 		Collider thisCollider = now->Collide(collider->C, V);
 		if (thisCollider.crash && thisCollider.dist < dist) return Color();

@@ -41,6 +41,9 @@ void Triangle::PreTreatment() {
 
 Collider Triangle::Collide(Vector3 ray_O, Vector3 ray_V) {
 	Collider collider;
+	if ((pos[0] - pos[1]).IsZeroVector() || (pos[0] - pos[2]).IsZeroVector() || (pos[1] - pos[2]).IsZeroVector()) {
+		return collider;
+	}
 	ray_V = ray_V.GetUnitVector();
 	int u = (mainCoord + 1) % 3, v = (mainCoord + 2) % 3;
 	double lnd = 1.0 / (ray_V.GetCoord(mainCoord) + nu * ray_V.GetCoord(u) + nv * ray_V.GetCoord(v));
@@ -56,8 +59,9 @@ Collider Triangle::Collide(Vector3 ray_O, Vector3 ray_V) {
 	if (x + y > 1) return collider;
 	if (parent != NULL && !parent->GetVertexN(normalVectorID[0]).IsZeroVector())
 		collider.N = parent->GetVertexN(normalVectorID[0]) * (1 - x - y) + parent->GetVertexN(normalVectorID[1]) * x + parent->GetVertexN(normalVectorID[2]) * y;
-	else
+	else {
 		collider.N = N;
+	}
 	
 	double d = collider.N.Dot(ray_V);
 	collider.crash = true;

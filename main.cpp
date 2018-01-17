@@ -5,6 +5,6 @@ int main() {
 	raytracer->SetOutput( "picture.bmp" );
 	raytracer->Run();
 	delete raytracer;
-	//system("Pause");
+
 	return 0;
 }

@@ -31,6 +31,9 @@ Color Raytracer::CalnDiffusion(Collider* collider, int* hash ) {
 
 	ret += color * photonmap->GetIrradiance( collider , camera->GetSampleDist() , camera->GetSamplePhotons() ) * pri->GetMaterial()->diff;
 
+	//for (Light* light = scene->GetLightHead(); light != NULL; light = light->GetNext())
+		//ret += color * light->GetIrradiance(collider, scene->GetPrimitiveHead(), scene->GetCamera()->GetShadeQuality(), hash);
+
 	return ret;
 }
 
@@ -51,8 +54,10 @@ Color Raytracer::CalnRefraction(Collider* collider, Vector3 ray_V , int dep, boo
 	ray_V = ray_V.Refract(collider->N, n, &nextRefracted);
 
 	Color alpha = Color(1, 1, 1) * pri->GetMaterial()->refr;
-	if (refracted)
+	if (refracted) {
 		alpha = alpha * (pri->GetMaterial()->absor * -collider->dist).Exp();
+	}
+
 	Color rcol = RayTracing(collider->C, ray_V, dep + 1, nextRefracted, hash);
 	return rcol * alpha;
 }
@@ -104,18 +109,18 @@ void Raytracer::Run() {
 		sample[i] = new int[W];
 		for ( int j = 0 ; j < W ; j++ )
 			sample[i][j] = 0;
-	}
+	}	
 
 #pragma omp parallel for
 	for ( int i = 0 ; i < H ; i++ ) {
 		std::cout << "Sampling:   " << i << "/" << H << std::endl;
 		for ( int j = 0 ; j < W ; j++ ) {
-			Vector3 ray_V = camera->Emit( i , j );
-			Color color = RayTracing( ray_O , ray_V , 1 , false, &sample[i][j] );
-			camera->SetColor( i , j , color );
+			Vector3 ray_V = camera->Emit(i, j);
+			Color color = RayTracing(ray_O, ray_V, 1, false, &sample[i][j]);
+			camera->SetColor(i, j, color);
 		}
 	}
-
+	
 #pragma omp parallel for
 	for ( int i = 0 ; i < H ; i++ ) {
 		std::cout << "Resampling: " << i << "/" << H << std::endl;

@@ -4,6 +4,7 @@
 #include<sstream>
 #include<cstdlib>
 #include<ctime>
+#include "bezier.h"
 
 Scene::Scene() {
 	primitive_head = NULL;
@@ -65,6 +66,7 @@ void Scene::CreateScene(std::string file) {
 			if (type == "rectangle") new_primitive = new Rectangle;
 			if (type == "triangle") new_primitive = new Triangle;
 			if (type == "polyhedron") new_primitive = new Polyhedron;
+			if (type == "bezier") new_primitive = new Bezier;
 			AddPrimitive(new_primitive);
 		}
 		else
@@ -85,6 +87,7 @@ void Scene::CreateScene(std::string file) {
 			std::string var; fin2 >> var;
 			if (var == "end") {
 				if (obj == "primitive" && new_primitive != NULL) new_primitive->PreTreatment();
+				if (obj == "bezier" && new_primitive != NULL) new_primitive->PreTreatment();
 				break;
 			}
 

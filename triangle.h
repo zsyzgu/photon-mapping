@@ -25,6 +25,7 @@ public:
 	Color GetTexture(Vector3 C);
 	void SetParent(Polyhedron* _parent) { parent = _parent; }
 	Vector3& GetPos(int i) { return pos[i]; }
+	void SetPos(int i, Vector3 pt) { pos[i] = pt; }
 	int& GetVertex(int i) { return vertex[i]; }
 	int& GetTextureVertex(int i) { return textureVertex[i]; }
 	int& GetNormalVectorID(int i) { return normalVectorID[i]; }
